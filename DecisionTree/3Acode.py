@@ -1,54 +1,46 @@
 import pandas as pd
 import math
 
+# Helper function to count labels in the dataset. Don't need to change.
 def label_counts(data):
-   #label_counts = data.iloc[:-1].valuecounts()
    label_counts = {}
-   #look at last column which is the targets
    for i in data.iloc[:, -1]:
       if i not in label_counts:
          label_counts[i] = 0
       label_counts[i] = label_counts[i] + 1
    return label_counts
 
-### Entropy = - sum(p_i) * log2(p_i)
+# Entropy calculation function. Don't need to change.
 def entropy(data):
    label_count = label_counts(data)
    total_num_labels = len(data)
-   entropy = -1*sum((count/total_num_labels)*math.log2((count/total_num_labels)) for count in label_count.values())
-#    for i in label_counts.values():
-#       prob = i / total_num_labels
-#       entropy = -(prob * math.log2(prob))
+   entropy = -1 * sum((count / total_num_labels) * math.log2((count / total_num_labels)) for count in label_count.values())
    return entropy
 
-### gini index = 1 - sum(p^2)
+# Gini Index calculation function. Don't need to change.
 def gini_index(data):
    label_count = label_counts(data)
-   total_num_lables = len(data)
-   gini = 1 - sum((count / total_num_lables) ** 2 for count in label_count.values())
+   total_num_labels = len(data)
+   gini = 1 - sum((count / total_num_labels) ** 2 for count in label_count.values())
    return gini
 
-### me = 1 - (majority class / total num)
+# Majority Error calculation function. Don't need to change.
 def majority_error(data):
    label_count = label_counts(data)
    total_num_labels = len(data)
    majority_label = max(label_count.values())
    return 1 - (majority_label / total_num_labels)
 
-#split the data into subsets where the it has every unique value in each attribute name.
+#split the data into subsets where the it holds every unique value in each attribute name. Save each dataset as a value in a dict to it's attribute
 def split_data(data, attribute_name):
-    splits = {}
-    for _, row in data.iterrows():
-        value = row[attribute_name]
-        if value not in splits:
-            splits[value] = []
-        splits[value].append(row)
-    return {key: pd.DataFrame(value) for key, value in splits.items()}
+    data_subset = {}
+    for attr_value in data[attribute_name].unique():
+        data_subset[attr_value] = data[data[attribute_name] == attr_value]
+    return data_subset
 
-# IG = total entropy - attribute weigthed average entropy
+# Information Gain calculation. Don't need to change this
 def information_gain(data, attribute_name, criterion_func):
     total_entropy = criterion_func(data)
-    #split the data based on attribute
     splits = split_data(data, attribute_name)
     total_size = len(data)
     weighted_entropy = 0
@@ -58,6 +50,7 @@ def information_gain(data, attribute_name, criterion_func):
         weighted_entropy += (subset_size / total_size) * criterion_func(subset_of_data)
     return total_entropy - weighted_entropy
 
+# Choosing the best attribute based on the chosen criterion. Don't need to change.
 def choose_best_attribute(data, attributes, criterion_func):
     best_gain = -1
     best_attr = None
@@ -69,36 +62,31 @@ def choose_best_attribute(data, attributes, criterion_func):
             best_attr = attr_name
     return best_attr
 
-
+# Building the decision tree recursively
 def lets_build_a_tree_baby(data, attributes, criterion_func, depth=0, max_depth=None):
     labels = data.iloc[:, -1]
     
-    # Base cases: all labels are the same, or no attributes left, or max depth reached
     if len(labels.unique()) == 1:
         return labels.iloc[0]
     if not attributes or (max_depth is not None and depth == max_depth):
         return get_most_common_label(labels)
     
-    # Choose the best attribute to split on
     best_attr = choose_best_attribute(data, attributes, criterion_func)
     
-    # Split the dataset on the best attribute
     tree = {best_attr: {}}
     splits = split_data(data, best_attr)
     remaining_attributes = [attr for attr in attributes if attr != best_attr]
     
-    # Recursively build the tree for each split
     for attr_value, subset in splits.items():
         tree[best_attr][attr_value] = lets_build_a_tree_baby(subset, remaining_attributes, criterion_func, depth + 1, max_depth)
-    
     return tree
 
-#broken. please help
+#broken. please help. update: works if it is a pandas dataframe. We in business.
 def get_most_common_label(labels):
     labels = label_counts(pd.DataFrame(labels))
     return max(labels, key=labels.get)
 
-
+#no change
 def predict(tree, example):
     if not isinstance(tree, dict):
         return tree
@@ -120,12 +108,12 @@ def accuracy(tree, data):
             correct += 1
     return correct / len(data)
 
-### Part B
+# Prediction error function
 def prediction_error(tree, data):
     acc = accuracy(tree, data)
     return 1 - acc
 
-#
+# Run decision trees with varying depths
 def run_different_depths(train_data, test_data, attributes, depths):
     results = {
         'Depth': [],
@@ -134,7 +122,7 @@ def run_different_depths(train_data, test_data, attributes, depths):
         'Test Error': []
     }
     
-    print("Problem 2b:")
+    print("Problem 3a:")
     for depth in depths:
         print(f"\n Making Tree with max depth = {depth}")
 
@@ -150,19 +138,16 @@ def run_different_depths(train_data, test_data, attributes, depths):
         train_error_gi = prediction_error(tree_gini_index, train_data)
         test_error_gi = prediction_error(tree_gini_index, test_data)
 
-        # Record results for Information Gain
         results['Depth'].append(depth)
         results['Criterion'].append('Information Gain(Entropy)')
         results['Train Error'].append(train_error_ig)
         results['Test Error'].append(test_error_ig)
 
-        # Record results for Majority Error
         results['Depth'].append(depth)
         results['Criterion'].append('Majority Error')
         results['Train Error'].append(train_error_me)
         results['Test Error'].append(test_error_me)
 
-        
         results['Depth'].append(depth)
         results['Criterion'].append('Gini Index')
         results['Train Error'].append(train_error_gi)
@@ -170,23 +155,47 @@ def run_different_depths(train_data, test_data, attributes, depths):
 
     return pd.DataFrame(results)
 
-#note: csv files don't have a header
-train_data = pd.read_csv('car/train.csv', header=None)
-test_data = pd.read_csv('car/test.csv', header=None)
+# Binarize numerical attributes based on median. If it's less then median, then 0, if greater than, then 1
+def binarize_numerical_features(data, numerical_attributes):
+    for attr in numerical_attributes:
+        median_value = data[attr].median()
+        data[attr] = (data[attr] >= median_value).astype(int)
+    return data
 
-train_data.columns = ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
-test_data.columns = ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
+# make a function that runs
+# def prepare_data(train_data, test_data, numerical_attributes):
+#     train_data = binarize_numerical_features(train_data, numerical_attributes)
+#     for attr in numerical_attributes:
+#         median_value = train_data[attr].median()
+#         test_data[attr] = (test_data[attr] >= median_value).astype(int)
+#     return train_data, test_data
 
-# for most of the functions to work, they will need the names of the dataset columns, or the attributes
+# Load the Bank Marketing dataset (train.csv, test.csv)
+train_data = pd.read_csv('bank/train.csv', header=None)
+test_data = pd.read_csv('bank/test.csv', header=None)
+
+# Define column names from 'data-desc.txt'
+train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 
+                      'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 
+                      'previous', 'poutcome', 'label']
+test_data.columns = train_data.columns
+
+# Specify the numerical attributes
+numerical_attributes = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays', 'previous']
+
+# Prepare data
+#train_data, test_data = prepare_data(train_data, test_data, numerical_attributes)
+
+train_data = binarize_numerical_features(train_data, numerical_attributes= numerical_attributes)
+test_data = binarize_numerical_features(test_data, numerical_attributes= numerical_attributes)
+
+# get the names of the dataset columns, or the attributes
 attributes = list(train_data.columns[:-1])
 
-depths = range(1, 7)  
-results_df = run_different_depths(train_data, test_data, attributes, depths)
-
+depths = range(1, 17)
+results= run_different_depths(train_data, test_data, attributes, depths)
 
 print("\nPrediction Errors Table:")
-print(results_df)
+print(results)
 
-# 2c. As the depth of the tree gets deeper, both the training error and test error decrease.
-print("\n")
-print("Problem 2c: As the depth of the tree gets deeper, both the training error and test error generally decrease across all criterion.")
+

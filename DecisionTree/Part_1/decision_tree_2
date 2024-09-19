@@ -1,0 +1,17 @@
+digraph {
+	Outlook [label=Outlook]
+	Sunny [label=Humidity]
+	Overcast [label="PlayTennis: Yes"]
+	Rainy [label=Wind]
+	High [label="PlayTennis: No"]
+	Normal_Sunny [label="PlayTennis: Yes"]
+	Weak [label="PlayTennis: Yes"]
+	Strong [label="PlayTennis: No"]
+	Outlook -> Sunny [label=Sunny]
+	Outlook -> Overcast [label=Overcast]
+	Outlook -> Rainy [label=Rainy]
+	Sunny -> High [label=High]
+	Sunny -> Normal_Sunny [label=Normal]
+	Rainy -> Weak [label=Weak]
+	Rainy -> Strong [label=Strong]
+}

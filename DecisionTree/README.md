@@ -13,4 +13,4 @@ sketchbook.ipynb - orginal juypter file I started to code in<br />
 3Acode.py executable for the bank dataset decision tree
 <br />
 run.sh<br />
-Message to TA: This will take like 10 minutes to run. Sit back and sip some apple juice.
+Message to TA: You will need to be in the CS6350/DecisonTree folder to execute. This will take like 10 minutes to run. Sit back and sip some apple juice. 

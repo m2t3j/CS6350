@@ -175,8 +175,8 @@ def run_different_depths(train_data, test_data, attributes, depths):
     return pd.DataFrame(results)
 
 #note: csv files don't have a header. Will have to manually create the column names
-train_data = pd.read_csv('car/train.csv', header=None)
-test_data = pd.read_csv('car/test.csv', header=None)
+train_data = pd.read_csv('Data/car/train.csv', header=None)
+test_data = pd.read_csv('Data/car/test.csv', header=None)
 
 train_data.columns = ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
 test_data.columns = ['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'label']
@@ -189,8 +189,10 @@ results = run_different_depths(train_data, test_data, attributes, depths)
 
 
 print("\nPrediction Errors Table for 2b:")
+print("\n")
 print(results)
 
 # 2c. As the depth of the tree gets deeper, both the training error and test error decrease.
 print("\n")
 print("Problem 2c: As the depth of the tree gets deeper, both the training error and test error generally decrease across all criterion. It also looks like Majority Error generally performs the worse and Entropy IG performs the best on this dataset.")
+print("\n")

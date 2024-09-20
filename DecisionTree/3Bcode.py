@@ -182,8 +182,8 @@ def impute_unknown(data, categorical_attributes):
 
 
 # Load the Bank Marketing dataset (train.csv, test.csv)
-train_data = pd.read_csv('bank/train.csv', header=None)
-test_data = pd.read_csv('bank/test.csv', header=None)
+train_data = pd.read_csv('Data/bank/train.csv', header=None)
+test_data = pd.read_csv('Data/bank/test.csv', header=None)
 
 # Define column names from 'data-desc.txt'
 train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 

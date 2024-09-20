@@ -3,11 +3,13 @@ import math
 
 # Helper function to count labels in the dataset. Don't need to change.
 def label_counts(data):
-   label_counts = {}
-   for i in data.iloc[:, -1]:
-      if i not in label_counts:
-         label_counts[i] = 0
-      label_counts[i] = label_counts[i] + 1
+   label_counts = data.iloc[:, -1].value_counts().to_dict()
+#    label_counts = {}
+#    #look at last column which is the targets
+#    for i in data.iloc[:, -1]:
+#       if i not in label_counts:
+#          label_counts[i] = 0
+#       label_counts[i] = label_counts[i] + 1
    return label_counts
 
 # Entropy calculation function. Don't need to change.
@@ -88,13 +90,18 @@ def get_most_common_label(labels):
 
 #no change
 def predict(tree, example):
+    # Base Case: Return the Label (Leaf Node). If the tree isn't a dict, then reached a leaf node
     if not isinstance(tree, dict):
         return tree
+    # Get the Attribute to Split On
     attr = next(iter(tree))
+    # Get the Value of the Attribute from the Example
     value = example[attr]
+    # Find the next Subtree Based on the Example's Attribute Value
     subtree = tree[attr].get(value)
     if subtree is None:
         return None 
+    # recursivley call function until the last subtree(leaf node) is found which represents the prediciton
     return predict(subtree, example)
 
 # Function to evaluate the decision tree accuracy
@@ -178,9 +185,10 @@ test_data = pd.read_csv('bank/test.csv', header=None)
 train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 
                       'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 
                       'previous', 'poutcome', 'label']
-test_data.columns = train_data.columns
+test_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 
+                      'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays', 
+                      'previous', 'poutcome', 'label']
 
-# Specify the numerical attributes
 numerical_attributes = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays', 'previous']
 
 # Prepare data
@@ -197,5 +205,4 @@ results= run_different_depths(train_data, test_data, attributes, depths)
 
 print("\nPrediction Errors Table:")
 print(results)
-
 

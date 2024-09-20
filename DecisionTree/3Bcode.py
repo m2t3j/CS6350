@@ -129,7 +129,7 @@ def run_different_depths(train_data, test_data, attributes, depths):
         'Test Error': []
     }
     
-    print("Problem 3a:")
+    print("Problem 3b:")
     for depth in depths:
         print(f"\n Making Tree with max depth = {depth}")
 
@@ -211,6 +211,6 @@ results= run_different_depths(train_data, test_data, attributes, depths)
 
 print("\nPrediction Errors Table for 3B:")
 print(results)
-print("\n3c: Comparing all the results, the deeper the tree goes when imputing, the more likely it is to overfit the data. For 3a and 3b, we can see that the training error goes toward zero while the test error diverges. ")
+print("\n3c: Comparing all the results, the deeper the tree goes when imputing, the more likely it is to overfit the data. For 3a and 3b, we can see that the training error goes toward zero while the test error diverges, meaning that they are overfitting. ")
 print("\nReplacing unknown values with the most common value in an attribute can cause the model to overrely on these values for the tree calculations and not generalize well to unseen data.")
-print('\nBased on these results, I would say that imputation does help, but if there is a large number of unknown values, then it can cause overfitting.')
+print('\nBased on these results, I would say that imputation does help, but if there is a large number of unknown values, then it can add to a model overfitting.')

@@ -188,9 +188,9 @@ depths = range(1, 7)
 results = run_different_depths(train_data, test_data, attributes, depths)
 
 
-print("\nPrediction Errors Table:")
+print("\nPrediction Errors Table for 2b:")
 print(results)
 
 # 2c. As the depth of the tree gets deeper, both the training error and test error decrease.
 print("\n")
-print("Problem 2c: As the depth of the tree gets deeper, both the training error and test error generally decrease across all criterion.")
+print("Problem 2c: As the depth of the tree gets deeper, both the training error and test error generally decrease across all criterion. It also looks like Majority Error generally performs the worse and Entropy IG performs the best on this dataset.")

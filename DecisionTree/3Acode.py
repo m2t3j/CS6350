@@ -163,7 +163,7 @@ def run_different_depths(train_data, test_data, attributes, depths):
     return pd.DataFrame(results)
 
 # Binarize numerical attributes based on median. If it's less then median, then 0, if greater than, then 1
-def binarize_numerical_features(data, numerical_attributes):
+def make_binary(data, numerical_attributes):
     for attr in numerical_attributes:
         median_value = data[attr].median()
         data[attr] = (data[attr] >= median_value).astype(int)
@@ -194,8 +194,8 @@ numerical_attributes = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays'
 # Prepare data
 #train_data, test_data = prepare_data(train_data, test_data, numerical_attributes)
 
-train_data = binarize_numerical_features(train_data, numerical_attributes= numerical_attributes)
-test_data = binarize_numerical_features(test_data, numerical_attributes= numerical_attributes)
+train_data = make_binary(train_data, numerical_attributes= numerical_attributes)
+test_data = make_binary(test_data, numerical_attributes= numerical_attributes)
 
 # get the names of the dataset columns, or the attributes
 attributes = list(train_data.columns[:-1])
@@ -203,6 +203,5 @@ attributes = list(train_data.columns[:-1])
 depths = range(1, 17)
 results= run_different_depths(train_data, test_data, attributes, depths)
 
-print("\nPrediction Errors Table:")
+print("\nPrediction Errors Table for 3:")
 print(results)
-

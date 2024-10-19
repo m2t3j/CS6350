@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
 
-### Takes about 84 minutes to run
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Decision stump implementation with weighted examples
 class DecisionStump:
@@ -76,8 +78,8 @@ class AdaBoost:
         return np.sign(final_predictions)
 
 # Load and preprocess the dataset
-train_data = pd.read_csv('Data/bank/train.csv', header=None)
-test_data = pd.read_csv('Data/bank/test.csv', header=None)
+train_data = pd.read_csv('Ensemble Learning/Data/bank/train.csv', header=None)
+test_data = pd.read_csv('Ensemble Learning/Data/bank/test.csv', header=None)
 
 train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing',
                       'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays',
@@ -103,20 +105,61 @@ y_train = train_data['label'].values
 X_test = test_data.drop('label', axis=1).values
 y_test = test_data['label'].values
 
-T_values = range(1, 501)
-train_errors, test_errors = [], []
-
-for T in T_values:
+# Collect train and test errors for each stump at every iteration
+def fit_and_evaluate_stumps(T):
     model = AdaBoost(T=T)
     model.fit(X_train, y_train)
 
-    train_errors.append(np.mean(model.predict(X_train) != y_train))
-    test_errors.append(np.mean(model.predict(X_test) != y_test))
+    stump_train_errors = []
+    stump_test_errors = []
 
+    for stump, weight in zip(model.stumps, model.stump_weights):
+        stump_train_error = np.mean(stump.predict(X_train) != y_train)
+        stump_test_error = np.mean(stump.predict(X_test) != y_test)
+        stump_train_errors.append(stump_train_error)
+        stump_test_errors.append(stump_test_error)
+
+    train_error = np.mean(model.predict(X_train) != y_train)
+    test_error = np.mean(model.predict(X_test) != y_test)
+
+    return train_error, test_error, stump_train_errors, stump_test_errors
+
+T_values = range(1, 501)
+
+print("Calculating 2a Errors... Will take about 10 minutes")
+# Use joblib's Parallel to parallelize over the T values
+results = Parallel(n_jobs=-1)(delayed(fit_and_evaluate_stumps)(T) for T in T_values)
+
+# Unpack the results
+train_errors, test_errors, all_stump_train_errors, all_stump_test_errors = zip(*results)
+
+print("Printing Plots :")
+
+# Plot 1: Training and test errors for AdaBoost over iterations
 plt.figure(figsize=(10, 5))
 plt.plot(T_values, train_errors, label='Train Error')
 plt.plot(T_values, test_errors, label='Test Error')
-plt.xlabel('Iterations')
+plt.xlabel('Iterations (T)')
 plt.ylabel('Error')
 plt.legend()
+plt.title('AdaBoost Training and Test Error vs. Iterations')
 plt.show()
+
+# Plot 2: Training and test errors for individual stumps
+plt.figure(figsize=(10, 5))
+for i, (stump_train_errors, stump_test_errors) in enumerate(zip(all_stump_train_errors, all_stump_test_errors)):
+    plt.plot([i + 1] * len(stump_train_errors), stump_train_errors, 'ro', alpha=0.5, label='Train Error' if i == 0 else "")
+    plt.plot([i + 1] * len(stump_test_errors), stump_test_errors, 'bo', alpha=0.5, label='Test Error' if i == 0 else "")
+
+plt.xlabel('Iteration (T)')
+plt.ylabel('Error')
+plt.title('Errors of Individual Decision Stumps Across Iterations')
+plt.legend()
+plt.show()
+
+print(
+    "2a. Generally, the test error for the Adaboost is about half of that "
+    "of the decision tree from homework 1 and did better at generalization.\n"
+    "The training error for the decision tree was practically 0, meaning it "
+    "was overfitting, and the results of the Adaboost do not show that."
+)

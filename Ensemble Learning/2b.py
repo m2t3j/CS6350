@@ -1,9 +1,13 @@
-#b
+#b using parrallel computing
 
 import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from joblib import Parallel, delayed  
+
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Decision stump implementation with weighted examples
 class DecisionStump:
@@ -75,7 +79,7 @@ class AdaBoost:
             final_predictions += weight * stump.predict(X)
         return np.sign(final_predictions)
 
-# Function to impute missing values with majority value
+# Function to impute missing values with the majority value
 def impute_missing_values(data):
     for column in data.columns:
         if data[column].dtype == 'object':
@@ -87,8 +91,8 @@ def impute_missing_values(data):
     return data
 
 # Load and preprocess the dataset
-train_data = pd.read_csv('Data/bank/train.csv', header=None)
-test_data = pd.read_csv('Data/bank/test.csv', header=None)
+train_data = pd.read_csv('Ensemble Learning/Data/bank/train.csv', header=None)
+test_data = pd.read_csv('Ensemble Learning/Data/bank/test.csv', header=None)
 
 train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance', 'housing',
                       'loan', 'contact', 'day', 'month', 'duration', 'campaign', 'pdays',
@@ -118,16 +122,24 @@ y_train = train_data['label'].values
 X_test = test_data.drop('label', axis=1).values
 y_test = test_data['label'].values
 
-T_values = range(1, 501)
-train_errors, test_errors = [], []
-
-for T in T_values:
+# Parallelized function for fitting the AdaBoost model and collecting errors
+def compute_errors(T):
     model = AdaBoost(T=T)
     model.fit(X_train, y_train)
+    train_error = np.mean(model.predict(X_train) != y_train)
+    test_error = np.mean(model.predict(X_test) != y_test)
+    return train_error, test_error
 
-    train_errors.append(np.mean(model.predict(X_train) != y_train))
-    test_errors.append(np.mean(model.predict(X_test) != y_test))
 
+print("Calculating 2b Errors: Will take about 10 minutes")
+# Parallel execution over multiple iterations using joblib
+T_values = range(1, 501)
+results = Parallel(n_jobs=-1)(delayed(compute_errors)(T) for T in T_values)
+
+# Extract train and test errors from the results
+train_errors, test_errors = zip(*results)
+
+# Plot the results
 plt.figure(figsize=(10, 5))
 plt.plot(T_values, train_errors, label='Train Error')
 plt.plot(T_values, test_errors, label='Test Error')
@@ -135,3 +147,6 @@ plt.xlabel('Iterations')
 plt.ylabel('Error')
 plt.legend()
 plt.show()
+
+
+print("2b: Generally, it seems that the Bagged Trees have less error(though only slightly) than the Adaboost model and have better efficency. The single tree from HW1 was the worst performing")

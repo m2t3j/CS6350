@@ -158,4 +158,8 @@ plt.show()
 
 
 
+<<<<<<< HEAD
 print("2b: Generally, it seems that the Bagged Trees have a bigger test error(though only slightly) than the Adaboost model and seem to be overfitting. I also runs a lot quicker and as better efficency. The single tree from HW1 was the worst performing")
+=======
+print("2b: Generally, it seems that the Bagged Trees have a bigger test error(though only slightly) than the Adaboost model and seem to be overfitting. I also runs a lot quicker and as better efficency. The single tree from HW1 was the worst performing")
+>>>>>>> e0b78c17a7451c836a9b32d22b9260704ec1e926

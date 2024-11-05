@@ -1,96 +1,107 @@
-#b using parrallel computing
-
-import pandas as pd
 import numpy as np
-import math
+import pandas as pd
+from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
-from joblib import Parallel, delayed  
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# Decision stump implementation with weighted examples
-class DecisionStump:
-    def __init__(self):
+class DecisionTree:
+    def __init__(self, max_depth=None):
+        self.max_depth = max_depth
         self.feature = None
         self.threshold = None
-        self.left_class = None
-        self.right_class = None
+        self.left = None
+        self.right = None
+        self.label = None
 
-    def fit(self, X, y, weights):
-        X = np.array(X)
-        y = np.array(y, dtype=float)
-        weights = np.array(weights, dtype=float)
+    def fit(self, X, y, depth=0):
+        if len(np.unique(y)) == 1 or (self.max_depth is not None and depth >= self.max_depth):
+            self.label = np.sign(np.sum(y))
+            return
 
-        n_features = X.shape[1]
         best_gain = -1
+        n_features = X.shape[1]
 
         for feature in range(n_features):
             for threshold in np.unique(X[:, feature]):
                 left_mask = X[:, feature] <= threshold
                 right_mask = ~left_mask
 
-                left_class = np.sign(np.sum(weights[left_mask] * y[left_mask]))
-                right_class = np.sign(np.sum(weights[right_mask] * y[right_mask]))
+                if left_mask.sum() == 0 or right_mask.sum() == 0:
+                    continue
 
-                weighted_error = np.sum(weights[left_mask] * (y[left_mask] != left_class)) + \
-                                 np.sum(weights[right_mask] * (y[right_mask] != right_class))
+                left_class = np.sign(np.sum(y[left_mask]))
+                right_class = np.sign(np.sum(y[right_mask]))
 
-                gain = 1 - weighted_error / np.sum(weights)
+                weighted_error = (
+                    np.sum(y[left_mask] != left_class) + np.sum(y[right_mask] != right_class)
+                ) / len(y)
+
+                gain = 1 - weighted_error
                 if gain > best_gain:
                     best_gain = gain
                     self.feature = feature
                     self.threshold = threshold
-                    self.left_class = left_class
-                    self.right_class = right_class
+
+        left_mask = X[:, self.feature] <= self.threshold
+        right_mask = ~left_mask
+
+        self.left = DecisionTree(max_depth=self.max_depth)
+        self.left.fit(X[left_mask], y[left_mask], depth + 1)
+
+        self.right = DecisionTree(max_depth=self.max_depth)
+        self.right.fit(X[right_mask], y[right_mask], depth + 1)
 
     def predict(self, X):
-        predictions = np.where(X[:, self.feature] <= self.threshold, self.left_class, self.right_class)
+        if self.label is not None:
+            return np.full(X.shape[0], self.label)
+
+        left_mask = X[:, self.feature] <= self.threshold
+        right_mask = ~left_mask
+
+        predictions = np.empty(X.shape[0])
+        predictions[left_mask] = self.left.predict(X[left_mask])
+        predictions[right_mask] = self.right.predict(X[right_mask])
         return predictions
 
-# AdaBoost implementation
-class AdaBoost:
-    def __init__(self, T=50):
-        self.T = T
-        self.stumps = []
-        self.stump_weights = []
+def train_tree(X, y, max_depth=None):
+    indices = np.random.choice(len(X), size=len(X), replace=True)
+    X_sample = X[indices]
+    y_sample = y[indices]
 
-    def fit(self, X, y):
-        n_samples = X.shape[0]
-        weights = np.ones(n_samples) / n_samples
+    tree = DecisionTree(max_depth=max_depth)
+    tree.fit(X_sample, y_sample)
+    return tree
 
-        for _ in range(self.T):
-            stump = DecisionStump()
-            stump.fit(X, y, weights)
-            predictions = stump.predict(X)
+def majority_vote(trees, X):
+    predictions = np.array([tree.predict(X) for tree in trees])
+    return np.sign(np.sum(predictions, axis=0))
 
-            error = np.sum(weights * (predictions != y)) / np.sum(weights)
-            stump_weight = 0.5 * np.log((1 - error) / (error + 1e-10))
+def train_bagged_trees(X, y, n_trees=50, max_depth=None):
+    trees = []
+    train_errors = []
+    test_errors = []
 
-            self.stumps.append(stump)
-            self.stump_weights.append(stump_weight)
+    for i in range(n_trees):
+        tree = train_tree(X, y, max_depth)
+        trees.append(tree)
 
-            weights *= np.exp(-stump_weight * y * predictions)
-            weights /= np.sum(weights)
+        # Calculate errors with the current set of trees
+        train_pred = majority_vote(trees, X_train)
+        test_pred = majority_vote(trees, X_test)
 
-    def predict(self, X):
-        final_predictions = np.zeros(X.shape[0])
-        for stump, weight in zip(self.stumps, self.stump_weights):
-            final_predictions += weight * stump.predict(X)
-        return np.sign(final_predictions)
+        train_error = np.mean(train_pred != y_train)
+        test_error = np.mean(test_pred != y_test)
 
-# Function to impute missing values with the majority value
-def impute_missing_values(data):
-    for column in data.columns:
-        if data[column].dtype == 'object':
-            mode_value = data[column].mode()[0]
-            data[column].fillna(mode_value, inplace=True)
-        else:
-            median_value = data[column].median()
-            data[column].fillna(median_value, inplace=True)
-    return data
+        train_errors.append(train_error)
+        test_errors.append(test_error)
 
-# Load and preprocess the dataset
+        #print(f"Trees: {i + 1}, Train Error: {train_error:.4f}, Test Error: {test_error:.4f}")
+
+    return trees, train_errors, test_errors
+
+# Load and preprocess the dataset (as before)
 train_data = pd.read_csv('Ensemble Learning/Data/bank/train.csv', header=None)
 test_data = pd.read_csv('Ensemble Learning/Data/bank/test.csv', header=None)
 
@@ -99,7 +110,16 @@ train_data.columns = ['age', 'job', 'marital', 'education', 'default', 'balance'
                       'previous', 'poutcome', 'label']
 test_data.columns = train_data.columns
 
-# Impute missing values
+def impute_missing_values(data):
+    for column in data.columns:
+        if data[column].dtype == 'object':
+            mode_value = data[column].mode()[0]
+            data[column] = data[column].fillna(mode_value)
+        else:
+            median_value = data[column].median()
+            data[column] = data[column].fillna(median_value)
+    return data
+
 train_data = impute_missing_values(train_data)
 test_data = impute_missing_values(test_data)
 
@@ -122,31 +142,20 @@ y_train = train_data['label'].values
 X_test = test_data.drop('label', axis=1).values
 y_test = test_data['label'].values
 
-# Parallelized function for fitting the AdaBoost model and collecting errors
-def compute_errors(T):
-    model = AdaBoost(T=T)
-    model.fit(X_train, y_train)
-    train_error = np.mean(model.predict(X_train) != y_train)
-    test_error = np.mean(model.predict(X_test) != y_test)
-    return train_error, test_error
+# Train 100 Bagged Trees and collect errors
+print("Training Bagged Trees...")
+trees, train_errors, test_errors = train_bagged_trees(X_train, y_train, n_trees=100, max_depth=5)
 
-
-print("Calculating 2b Errors: Will take about 10 minutes")
-# Parallel execution over multiple iterations using joblib
-T_values = range(1, 501)
-results = Parallel(n_jobs=-1)(delayed(compute_errors)(T) for T in T_values)
-
-# Extract train and test errors from the results
-train_errors, test_errors = zip(*results)
-
-# Plot the results
-plt.figure(figsize=(10, 5))
-plt.plot(T_values, train_errors, label='Train Error')
-plt.plot(T_values, test_errors, label='Test Error')
-plt.xlabel('Iterations')
+# Plot the errors as a function of the number of trees
+plt.figure(figsize=(10, 6))
+plt.plot(range(1, 101), train_errors, label='Train Error')
+plt.plot(range(1, 101), test_errors, label='Test Error')
+plt.xlabel('Number of Trees')
 plt.ylabel('Error')
+plt.title('Training and Test Errors vs. Number of Trees')
 plt.legend()
 plt.show()
 
 
-print("2b: Generally, it seems that the Bagged Trees have less error(though only slightly) than the Adaboost model and have better efficency. The single tree from HW1 was the worst performing")
+
+print("2b: Generally, it seems that the Bagged Trees have a bigger test error(though only slightly) than the Adaboost model and seem to be overfitting. I also runs a lot quicker and as better efficency. The single tree from HW1 was the worst performing")

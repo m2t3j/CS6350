@@ -1,0 +1,633 @@
+---
+title: "HW3"
+author: "Matthew Jensen"
+date: "2024-10-31"
+output: html_document
+---
+
+# **Part 1**
+
+## Problem 1.
+
+### a.
+
+$$
+\text{Classifier: } 2x_1 + 3x_2 - 4 = 0
+$$
+
+#### Predicted Labels
+
+$$
+\text{label = sign(} w \cdot x + b)
+$$
+
+$$
+\text{Row 1: sign(} 2(1) + 3(1) -4 ) = \text{sign(} 1) = 1
+$$
+$$
+\text{Row 2: sign(} 2(1) + 3(-1) -4 = \text{sign(}-5) = -1
+$$
+$$
+\text{Row 3: sign(} 2(0) + 3(0) -4 = \text{sign(}-4) = -1
+$$
+$$
+\text{Row 4: sign(} 2(-1) + 3(3) -4 = \text{sign(}3) = 1
+$$
+
+$$
+\begin{array}{|c|c|}
+\hline
+ \textbf{Actual Label} &  \textbf{Predicted Label} \\
+\hline
+1 & 1 \\
+\hline
+-1 & -1 \\
+\hline
+-1 & -1 \\
+\hline
+1 & 1 \\
+\hline
+\end{array}
+$$
+#### Margin
+
+$$
+\text{Margin = min ( } \frac{( y_i(w \cdot x + b))}{||w||}) = \frac{1}{||w||}
+$$
+$$
+\frac{1}{||w||} = \frac{1}{\sqrt{2^2 + 3^2}} = \frac{1}{\sqrt{13}} \approx .277
+$$
+
+### b
+
+$$
+\text{Row 4: sign(} 2(-1) + 3(-1) -4 = \text{sign(}-9) = -1
+$$
+$$
+\begin{array}{|c|c|}
+\hline
+ \textbf{Actual Label} &  \textbf{Predicted Label} \\
+\hline
+1 & 1 \\
+\hline
+-1 & -1 \\
+\hline
+-1 & -1 \\
+\hline
+1 & 1 \\
+\hline
+\hline
+1 & -1 \\
+\hline
+\end{array}
+$$
+$$
+\textbf{No. Because the last point is misclassified, there is not a margin for this hyperplane.}
+$$
+
+## **Problem 2.**
+
+### a.
+
+$$
+\text{Margin of a dataset refers to the largest possible margin achievable by any hyperplane/linear classifier for that dataset.The hyperplane the maximizes the }
+$$
+$$
+\text{There is a margin for this dataset as each of the points are correctly classified when using the classifer } x_1 + x_2 = 0  \text{. Of the possible margins I tested (pictured below), this had the maximum margin at } \frac{1}{\sqrt2}. \text{I will confidently say that this is the margin of the dataset as all points are equidistant, but without testing every possible hyperplane, it isn't definitive.(But I'm 99% sure that this is the margin)}
+$$
+
+
+
+
+
+```{r, echo=FALSE}
+x_1 <- c(-1,0,1,0)
+x_2 <- c(0,-1,0,1)
+
+labels <- c(-1, -1, 1, 1)
+
+plot(x_1,x_2, col = ifelse(labels == 1, "blue", "red"), pch = 19)
+
+legend("topright", legend = c("Positive Points", "Negative Points"), 
+       col = c("blue", "red"), pch = 19)
+abline(h = 0, v = 0 , col = "gray", lty = 3)
+abline(a=0,b=-1, col = "black", lty= 19)
+title(main = "x_1 + x_2 = 0 Hyperplane")
+```
+
+#### b.
+
+$$
+\text{There is no linear classifier that correctly seperate all the points in this dataset and thus, there } \textbf{no margin} \text{ for this dataset.}
+$$
+
+## **Problem 3.**
+
+## Mistake Bound Theorem for Perceptron
+
+We are given a training dataset \( \{ (x_i, y_i) \}_{i=1}^m \) where \( x_i \in \mathbb{R}^n \) and \( y_i \in \{-1, +1\} \). We assume that there exists a vector \( u \in \mathbb{R}^n \) and a positive margin \( \gamma \) such that:
+
+\[
+y_i (u^T x_i) \geq \gamma \quad \text{for all } i = 1, 2, \dots, m
+\]
+
+Our goal is to show that the number of mistakes made by the Perceptron algorithm is bounded by:
+
+\[
+\frac{\| w^* \|^2}{\gamma^2}
+\]
+
+where \( w^* \) is any vector that can separate the data with margin \( \gamma \).
+
+### Proof
+
+1. **Initialize** the Perceptron algorithm with \( w = 0 \).
+
+2. **Define Mistakes**: Let \( M \) be the total number of mistakes made by the Perceptron algorithm. For each mistake, the weight vector \( w \) is updated as follows:
+   
+   \[
+   w = w + y_i x_i
+   \]
+
+   After \( M \) mistakes, the resulting weight vector \( w_M \) can be written as the sum of the updates:
+
+   \[
+   w_M = \sum_{j=1}^M y_{i_j} x_{i_j}
+   \]
+
+   where \( i_j \) represents the index of the example that was misclassified on the \( j \)-th mistake.
+
+3. **Bounding \( w_M \cdot u \)**:
+   
+   Since each example satisfies \( y_i (u^T x_i) \geq \gamma \), we have:
+
+   \[
+   y_{i_j} (u^T x_{i_j}) \geq \gamma
+   \]
+
+   Thus, the dot product \( w_M \cdot u \) can be bounded as follows:
+
+   \[
+   w_M \cdot u = \left( \sum_{j=1}^M y_{i_j} x_{i_j} \right) \cdot u = \sum_{j=1}^M y_{i_j} (u^T x_{i_j}) \geq M \gamma
+   \]
+
+4. **Bounding \( \| w_M \| \)**:
+   
+   On each update, we add \( y_i x_i \) to \( w \), so:
+
+   \[
+   \| w_{j+1} \|^2 = \| w_j + y_{i_j} x_{i_j} \|^2
+   \]
+
+   Expanding this:
+
+   \[
+   \| w_{j+1} \|^2 = \| w_j \|^2 + 2 y_{i_j} (w_j \cdot x_{i_j}) + \| x_{i_j} \|^2
+   \]
+
+   Since \( w_j \) misclassifies \( x_{i_j} \), we have \( y_{i_j} (w_j \cdot x_{i_j}) \leq 0 \). Therefore:
+
+   \[
+   \| w_{j+1} \|^2 \leq \| w_j \|^2 + \| x_{i_j} \|^2
+   \]
+
+   Assuming each \( x_i \) has a bounded norm \( \| x_i \| \leq R \), it follows that:
+
+   \[
+   \| w_M \|^2 \leq M R^2
+   \]
+
+5. **Combining Inequalities**:
+   
+   From Step 3, we have \( w_M \cdot u \geq M \gamma \), and from Step 4, we have \( \| w_M \| \leq \sqrt{M} R \). Using the Cauchy-Schwarz inequality, we obtain:
+
+   \[
+   w_M \cdot u \leq \| w_M \| \| u \| \leq R \| u \| \sqrt{M}
+   \]
+
+   Combining these:
+
+   \[
+   M \gamma \leq R \| u \| \sqrt{M}
+   \]
+
+6. **Solving for \( M \)**:
+   
+   Dividing both sides by \( \sqrt{M} \gamma \), we get:
+
+   \[
+   \sqrt{M} \leq \frac{R \| u \|}{\gamma}
+   \]
+
+   Squaring both sides gives:
+
+   \[
+   M \leq \frac{R^2 \| u \|^2}{\gamma^2}
+   \]
+
+### Conclusion
+
+The Perceptron algorithm makes at most \( \frac{R^2 \| u \|^2}{\gamma^2} \) mistakes.
+
+
+
+
+
+### **Problem 4**
+
+## Mistake Bound Theorem
+
+Given that the Mistake Bound Theorem for the Perceptron algorithm states:
+
+$$
+M \leq \frac{||R||^2 \|u\|^2}{\gamma^2}
+$$
+
+where:
+- \( R \) is the maximum norm of any input vector \( x_i \),
+- \( \| u \| \) is the norm of a weight vector \( u \) that correctly classifies all inputs with margin \( \gamma \).
+
+### Applying the Bound to Our Disjunction Function
+
+For the function \( f(x_1, x_2, \dots, x_n) = \neg x_1 \vee \neg x_2 \vee \dots \vee \neg x_k \vee x_{k+1} \vee \dots \vee x_{2k} \):
+
+1. **Maximum Norm \( R \):** Since each input vector is a Boolean vector (\(x_i \in \{0, 1\}\)), the maximum norm \( R \) is \( \sqrt{n} \).
+
+2. **Weight Vector \( u \):** We can construct \( u \) to match the function structure, setting:
+   - \(-1\) for the first \(k\) positions (for \(\neg x_1, \dots, \neg x_k\)),
+   - \(+1\) for the next \(k\) positions (for \(x_{k+1}, \dots, x_{2k}\)),
+   - \(0\) for the remaining entries.
+
+   Then, \( \| u \| = \sqrt{2k} \).
+
+3. **Margin \( \gamma \):** Assume a margin of \( \gamma = 1 \) for simplicity.
+
+### Calculating the Upper Bound
+
+Substituting these values into the mistake bound formula:
+
+$$
+M \leq \frac{(\sqrt{n})^2 \cdot (\sqrt{2k})^2}{1^2}
+$$
+
+This simplifies to:
+
+$$
+M \leq 2nk
+$$
+
+### Conclusion
+
+The Perceptron algorithm will make at most \( 2nk \) mistakes when learning this disjunction function.
+
+### **Problem 5**
+
+#### **Proof by Contradiction**
+
+For a linear classifier to shatter \(n\) points, it must correctly classify all possible labels for those points.For 4 points, there are \(2^4 = 16\) possible labels.
+
+Let's consider a 2D classifier, that splits positive and negative points with a hyperplane.
+
+```{r, echo=FALSE}
+x_1 <- c(1, 0, 2, -1)
+x_2 <- c(0, 1, -1, 2)
+
+labels <- c(1,1,0,0)
+
+plot(x_1,x_2, col = ifelse(labels == 1, "red","blue"), pch = 19)
+
+legend("topright", legend = c("Positive Points", "Negative Points"), 
+       col = c("blue", "red"), pch = 19)
+title("Contradiction Example Graph")
+
+```
+
+In this example, all 4 points are collinear, and thus, there is no linear classifier that can separate these points correctly based on their labels.
+
+Since we cannot achieve all 16 possible labels for 4 collinear points, a linear classifier in a plane cannot shatter 4 distinct collinear points.
+
+### **Problem 6**
+
+The VC Dimension is the maximum number of points that a hypothesis classifier \(H \) can shatter. 
+
+Each hypothesis classifier is a rectangle, where all the points with positive labels are within the center of the rectangle and all the points with negative labels are outside.
+
+For 1 point: A single point can be classified as positive or negative by placing a rectangle around it or not. So, \(H \) can shatter 1 point.
+For 2 points: We can cover each point individually or neither or both, so \(H \) can shatter 2 points.
+For 3 points: A rectangle can still cover any subset of three points in the plane, so  \(H \) can shatter 3 points.
+For 4 points: For any arrangement of 4 points in general position (not in a line or collinear), it is possible to find a rectangle for every subset of points, meaning 4 points can be shattered.
+For 5 points: However, with 5 points, it becomes impossible to achieve every possible labeling by placing a single rectangle around any subset of the points. For instance, there may be no way to enclose an arbitrary subset of 5 points in a way that matches every possible labeling.
+
+Therefore, the VC dimension VC(H) for the hypothesis class of all rectangles in a 2D plane is 4.
+
+
+# **Part 2**
+
+## a.
+
+- Perceptron Weights:  [-1.2333106,  -0.7830138, -0.87618231, -0.17396738]
+- Perceptron Bias:  1.0800000000000005
+- Average Train Error:  0.5555683122847302
+- Average Test Error: 0.5531062124248497
+
+## b.
+
+Distinct Weight Vectors and their Counts:
+Weight Vector: [-0.080094  -0.0091874 -0.027242  -0.032362 ], Bias: -0.02, Count: 6
+Weight Vector: [-0.059292  -0.1971614 -0.0444416  0.07431  ], Bias: -0.04, Count: 1
+Weight Vector: [-0.128586  -0.1188174 -0.1239336  0.0670862], Bias: -0.06, Count: 3
+Weight Vector: [-0.169644  -0.0420474 -0.1398424  0.0428102], Bias: -0.039999999999999994, Count: 3
+Weight Vector: [-0.235028  -0.2968594  0.1713036  0.0399738], Bias: -0.019999999999999993, Count: 7
+Weight Vector: [-0.313436  -0.2154134  0.166568  -0.0023282], Bias: 6.938893903907228e-18, Count: 5
+Weight Vector: [-0.38277   -0.1339654  0.080804  -0.0331642], Bias: -0.019999999999999993, Count: 9
+Weight Vector: [-0.3804134  -0.1023874  -0.079796   -0.03260358], Bias: -0.039999999999999994, Count: 10
+Weight Vector: [-0.3514114  -0.0302534  -0.16091    -0.06453558], Bias: -0.019999999999999993, Count: 3
+Weight Vector: [-0.2984534  -0.2330014  -0.13429     0.04487842], Bias: -0.039999999999999994, Count: 3
+Weight Vector: [-0.296135   -0.1685634  -0.202894   -0.01203558], Bias: -0.019999999999999993, Count: 8
+Weight Vector: [-0.3092884  -0.2245994  -0.128664    0.00791222], Bias: 6.938893903907228e-18, Count: 1
+Weight Vector: [-0.3068632  -0.22013    -0.1381294   0.02731702], Bias: 0.020000000000000007, Count: 2
+Weight Vector: [-0.3166794  -0.163226   -0.2110014  -0.03469098], Bias: 0.04000000000000001, Count: 10
+Weight Vector: [-0.2727934  -0.07222    -0.3105214  -0.08919898], Bias: 0.06000000000000001, Count: 2
+Weight Vector: [-0.3532294  -0.2383     -0.0594214  -0.11939698], Bias: 0.08000000000000002, Count: 3
+Weight Vector: [-0.351023   -0.198818   -0.1267574  -0.13244878], Bias: 0.10000000000000002, Count: 20
+Weight Vector: [-0.339013   -0.160164   -0.1925334  -0.13893178], Bias: 0.12000000000000002, Count: 34
+Weight Vector: [-0.285035   -0.404132   -0.2060656   0.03203222], Bias: 0.10000000000000002, Count: 1
+Weight Vector: [-0.2742478  -0.326244   -0.3023976  -0.05480378], Bias: 0.12000000000000002, Count: 9
+Weight Vector: [-0.3982538  -0.152632   -0.30221491 -0.12886378], Bias: 0.14, Count: 6
+Weight Vector: [-0.40207    -0.335226   -0.22771491 -0.01241578], Bias: 0.12000000000000001, Count: 6
+Weight Vector: [-0.532238   -0.159834   -0.22307671 -0.09115578], Bias: 0.14, Count: 12
+Weight Vector: [-0.505872   -0.1218     -0.28929871 -0.08985436], Bias: 0.16, Count: 9
+Weight Vector: [-0.5093312  -0.145432   -0.26166271 -0.07518236], Bias: 0.18, Count: 8
+Weight Vector: [-0.4563732  -0.34818    -0.23504271  0.03423164], Bias: 0.16, Count: 3
+Weight Vector: [-0.4370316  -0.271328   -0.33367071 -0.04841436], Bias: 0.18, Count: 1
+Weight Vector: [-0.4676756  -0.37326    -0.20011271 -0.04491476], Bias: 0.19999999999999998, Count: 11
+Weight Vector: [-0.4742604  -0.284156   -0.29154871 -0.02513876], Bias: 0.18, Count: 9
+Weight Vector: [-0.466733   -0.3006276  -0.27584011 -0.01023396], Bias: 0.19999999999999998, Count: 4
+Weight Vector: [-0.4555452  -0.3068356  -0.27217871 -0.00130336], Bias: 0.21999999999999997, Count: 31
+Weight Vector: [-0.4659352  -0.2415696  -0.33396871  0.01839464], Bias: 0.19999999999999998, Count: 13
+Weight Vector: [-0.5287812  -0.5022996  -0.02042271  0.00516164], Bias: 0.21999999999999997, Count: 2
+Weight Vector: [-0.5632952  -0.4129056  -0.18486071  0.04130764], Bias: 0.19999999999999998, Count: 6
+Weight Vector: [-0.5818892  -0.3369636  -0.27771871  0.04722164], Bias: 0.18, Count: 17
+Weight Vector: [-0.5695588  -0.2590756  -0.37226871 -0.04067436], Bias: 0.19999999999999998, Count: 8
+Weight Vector: [-0.5359608  -0.1749396  -0.46306471 -0.08853636], Bias: 0.21999999999999997, Count: 16
+Weight Vector: [-0.5872608  -0.2907376  -0.34282071 -0.087597  ], Bias: 0.23999999999999996, Count: 37
+Weight Vector: [-0.5602248  -0.2695476  -0.38969471 -0.0795974 ], Bias: 0.25999999999999995, Count: 15
+Weight Vector: [-0.6303448  -0.5208816  -0.08648271 -0.0946406 ], Bias: 0.27999999999999997, Count: 24
+Weight Vector: [-0.5956828  -0.4417936  -0.18130671 -0.1446746 ], Bias: 0.3, Count: 18
+Weight Vector: [-0.6321148  -0.3122976  -0.34233471 -0.1363036 ], Bias: 0.27999999999999997, Count: 6
+Weight Vector: [-0.5963648  -0.2166976  -0.44505871 -0.2010276 ], Bias: 0.3, Count: 5
+Weight Vector: [-0.6362968  -0.4066996  -0.25141871 -0.2036054 ], Bias: 0.32, Count: 11
+Weight Vector: [-0.6061428  -0.3675076  -0.31258671 -0.206054  ], Bias: 0.34, Count: 122
+Weight Vector: [-0.5583088  -0.2763776  -0.41236271 -0.264028  ], Bias: 0.36000000000000004, Count: 31
+Weight Vector: [-0.5189748  -0.5124816  -0.40426831 -0.10659   ], Bias: 0.34, Count: 3
+Weight Vector: [-0.5413508  -0.4457676  -0.43117831 -0.145736  ], Bias: 0.36000000000000004, Count: 19
+Weight Vector: [-0.5517408  -0.3805016  -0.49296831 -0.126038  ], Bias: 0.34, Count: 22
+Weight Vector: [-0.6256628  -0.6540596  -0.14137831 -0.1784    ], Bias: 0.36000000000000004, Count: 12
+Weight Vector: [-0.6077604  -0.5585836  -0.23824031 -0.290218  ], Bias: 0.38000000000000006, Count: 1
+Weight Vector: [-0.6181498  -0.4933176  -0.30003031 -0.2705196 ], Bias: 0.36000000000000004, Count: 113
+Weight Vector: [-0.6247338  -0.4042136  -0.39146631 -0.2507436 ], Bias: 0.34, Count: 1
+Weight Vector: [-0.5841138  -0.3671736  -0.45170831 -0.25068354], Bias: 0.36000000000000004, Count: 38
+Weight Vector: [-0.5437598  -0.3312096  -0.51087031 -0.24648554], Bias: 0.38000000000000006, Count: 49
+Weight Vector: [-0.5581734  -0.4663756  -0.39405431 -0.23401174], Bias: 0.4000000000000001, Count: 86
+Weight Vector: [-0.5291714  -0.3942416  -0.47516831 -0.26594374], Bias: 0.4200000000000001, Count: 14
+Weight Vector: [-0.5423248  -0.4502776  -0.40093831 -0.24599594], Bias: 0.4400000000000001, Count: 13
+Weight Vector: [-0.4984388  -0.3592716  -0.50045831 -0.30050394], Bias: 0.46000000000000013, Count: 2
+Weight Vector: [-0.5788748  -0.5253516  -0.24935831 -0.33070194], Bias: 0.48000000000000015, Count: 34
+Weight Vector: [-0.5577708  -0.5016376  -0.30218031 -0.32849534], Bias: 0.5000000000000001, Count: 11
+Weight Vector: [-0.5279788  -0.4330616  -0.38279831 -0.35701334], Bias: 0.5200000000000001, Count: 78
+Weight Vector: [-0.5345636  -0.3439576  -0.47423431 -0.33723734], Bias: 0.5000000000000001, Count: 6
+Weight Vector: [-0.5687716  -0.4395176  -0.35001631 -0.32928934], Bias: 0.5200000000000001, Count: 38
+Weight Vector: [-0.5791616  -0.3742516  -0.41180631 -0.30959134], Bias: 0.5000000000000001, Count: 4
+Weight Vector: [-0.5475416  -0.3568698  -0.45808231 -0.29310894], Bias: 0.5200000000000001, Count: 9
+Weight Vector: [-0.6103876  -0.6175998  -0.14453631 -0.30634194], Bias: 0.5400000000000001, Count: 2
+Weight Vector: [-0.6449016  -0.5282058  -0.30897431 -0.27019594], Bias: 0.5200000000000001, Count: 6
+Weight Vector: [-0.6634956  -0.4522638  -0.40183231 -0.26428194], Bias: 0.5000000000000001, Count: 25
+Weight Vector: [-0.6298976  -0.3681278  -0.49262831 -0.31214394], Bias: 0.5200000000000001, Count: 3
+Weight Vector: [-0.6402876  -0.3028618  -0.55441831 -0.29244594], Bias: 0.5000000000000001, Count: 17
+Weight Vector: [-0.7048976  -0.4471318  -0.32155231 -0.31136854], Bias: 0.5200000000000001, Count: 23
+Weight Vector: [-0.6920032  -0.3550078  -0.48849231 -0.25717054], Bias: 0.5000000000000001, Count: 84
+Weight Vector: [-0.6762652  -0.5463338  -0.41275831 -0.10710254], Bias: 0.4800000000000001, Count: 5
+Weight Vector: [-0.6461112  -0.5071418  -0.47392631 -0.10955114], Bias: 0.5000000000000001, Count: 122
+Weight Vector: [-0.5982772  -0.4160118  -0.57370231 -0.16752514], Bias: 0.5200000000000001, Count: 21
+Weight Vector: [-0.6703832  -0.5354918  -0.37187031 -0.18409434], Bias: 0.5400000000000001, Count: 27
+Weight Vector: [-0.6671616  -0.4062438  -0.53901631 -0.15366234], Bias: 0.5200000000000001, Count: 27
+Weight Vector: [-0.7410836  -0.6798018  -0.18742631 -0.20602434], Bias: 0.5400000000000001, Count: 12
+Weight Vector: [-0.7231812  -0.5843258  -0.28428831 -0.31784234], Bias: 0.5600000000000002, Count: 1
+Weight Vector: [-0.7335706  -0.5190598  -0.34607831 -0.29814394], Bias: 0.5400000000000001, Count: 113
+Weight Vector: [-0.7401546  -0.4299558  -0.43751431 -0.27836794], Bias: 0.5200000000000001, Count: 1
+Weight Vector: [-0.6995346  -0.3929158  -0.49775631 -0.27830788], Bias: 0.5400000000000001, Count: 38
+Weight Vector: [-0.6591806  -0.3569518  -0.55691831 -0.27410988], Bias: 0.5600000000000002, Count: 52
+Weight Vector: [-0.6959626  -0.5387178  -0.37208631 -0.27619628], Bias: 0.5800000000000002, Count: 35
+Weight Vector: [-0.6746886  -0.4648038  -0.45527431 -0.31495428], Bias: 0.6000000000000002, Count: 20
+Weight Vector: [-0.6217306  -0.6675518  -0.42865431 -0.20554028], Bias: 0.5800000000000002, Count: 28
+Weight Vector: [-0.5927286  -0.5954178  -0.50976831 -0.23747228], Bias: 0.6000000000000002, Count: 27
+Weight Vector: [-0.5488426  -0.5044118  -0.60928831 -0.29198028], Bias: 0.6200000000000002, Count: 2
+Weight Vector: [-0.6292786  -0.6704918  -0.35818831 -0.32217828], Bias: 0.6400000000000002, Count: 45
+Weight Vector: [-0.5994866  -0.6019158  -0.43880631 -0.35069628], Bias: 0.6600000000000003, Count: 33
+Weight Vector: [-0.6223506  -0.5270898  -0.55036031 -0.33798068], Bias: 0.6400000000000002, Count: 45
+Weight Vector: [-0.6289354  -0.4379858  -0.64179631 -0.31820468], Bias: 0.6200000000000002, Count: 6
+Weight Vector: [-0.6631434  -0.5335458  -0.51757831 -0.31025668], Bias: 0.6400000000000002, Count: 38
+Weight Vector: [-0.6735334  -0.4682798  -0.57936831 -0.29055868], Bias: 0.6200000000000002, Count: 13
+Weight Vector: [-0.7363794  -0.7290098  -0.26582231 -0.30379168], Bias: 0.6400000000000002, Count: 2
+Weight Vector: [-0.7708934  -0.6396158  -0.43026031 -0.26764568], Bias: 0.6200000000000002, Count: 6
+Weight Vector: [-0.7894874  -0.5636738  -0.52311831 -0.26173168], Bias: 0.6000000000000002, Count: 25
+Weight Vector: [-0.7558894  -0.4795378  -0.61391431 -0.30959368], Bias: 0.6200000000000002, Count: 3
+Weight Vector: [-0.7662794  -0.4142718  -0.67570431 -0.28989568], Bias: 0.6000000000000002, Count: 17
+Weight Vector: [-0.8308894  -0.5585418  -0.44283831 -0.30881828], Bias: 0.6200000000000002, Count: 23
+Weight Vector: [-0.817995   -0.4664178  -0.60977831 -0.25462028], Bias: 0.6000000000000002, Count: 84
+Weight Vector: [-0.802257   -0.6577438  -0.53404431 -0.10455228], Bias: 0.5800000000000002, Count: 5
+Weight Vector: [-0.772103   -0.6185518  -0.59521231 -0.10700088], Bias: 0.6000000000000002, Count: 122
+Weight Vector: [-0.724269   -0.5274218  -0.69498831 -0.16497488], Bias: 0.6200000000000002, Count: 21
+Weight Vector: [-0.796375   -0.6469018  -0.49315631 -0.18154408], Bias: 0.6400000000000002, Count: 27
+Weight Vector: [-0.7931534  -0.5176538  -0.66030231 -0.15111208], Bias: 0.6200000000000002, Count: 5
+Weight Vector: [-0.8035434  -0.4523878  -0.72209231 -0.13141408], Bias: 0.6000000000000002, Count: 22
+Weight Vector: [-0.8774654  -0.7259458  -0.37050231 -0.18377608], Bias: 0.6200000000000002, Count: 12
+Weight Vector: [-0.859563   -0.6304698  -0.46736431 -0.29559408], Bias: 0.6400000000000002, Count: 1
+Weight Vector: [-0.8699524  -0.5652038  -0.52915431 -0.27589568], Bias: 0.6200000000000002, Count: 113
+Weight Vector: [-0.8765364  -0.4760998  -0.62059031 -0.25611968], Bias: 0.6000000000000002, Count: 1
+Weight Vector: [-0.8359164  -0.4390598  -0.68083231 -0.25605962], Bias: 0.6200000000000002, Count: 15
+Weight Vector: [-0.9162624  -0.6053058  -0.43173831 -0.28480962], Bias: 0.6400000000000002, Count: 23
+Weight Vector: [-0.8759084  -0.5693418  -0.49090031 -0.28061162], Bias: 0.6600000000000003, Count: 48
+Weight Vector: [-0.8515124  -0.5273778  -0.55480831 -0.27804302], Bias: 0.6800000000000003, Count: 7
+Weight Vector: [-0.8357744  -0.7187038  -0.47907431 -0.12797502], Bias: 0.6600000000000003, Count: 32
+Weight Vector: [-0.8145004  -0.6447898  -0.56226231 -0.16673302], Bias: 0.6800000000000003, Count: 48
+Weight Vector: [-0.7854984  -0.5726558  -0.64337631 -0.19866502], Bias: 0.7000000000000003, Count: 152
+Weight Vector: [-0.7920832  -0.4835518  -0.73481231 -0.17888902], Bias: 0.6800000000000003, Count: 6
+Weight Vector: [-0.8262912  -0.5791118  -0.61059431 -0.17094102], Bias: 0.7000000000000003, Count: 38
+Weight Vector: [-0.8366812  -0.5138458  -0.67238431 -0.15124302], Bias: 0.6800000000000003, Count: 13
+Weight Vector: [-0.8995272  -0.7745758  -0.35883831 -0.16447602], Bias: 0.7000000000000003, Count: 8
+Weight Vector: [-0.9181212  -0.6986338  -0.45169631 -0.15856202], Bias: 0.6800000000000003, Count: 25
+Weight Vector: [-0.8845232  -0.6144978  -0.54249231 -0.20642402], Bias: 0.7000000000000003, Count: 3
+Weight Vector: [-0.8949132  -0.5492318  -0.60428231 -0.18672602], Bias: 0.6800000000000003, Count: 251
+Weight Vector: [-0.8470792  -0.4581018  -0.70405831 -0.24470002], Bias: 0.7000000000000003, Count: 21
+Weight Vector: [-0.9191852  -0.5775818  -0.50222631 -0.26126922], Bias: 0.7200000000000003, Count: 27
+Weight Vector: [-0.9159636  -0.4483338  -0.66937231 -0.23083722], Bias: 0.7000000000000003, Count: 27
+Weight Vector: [-0.9898856  -0.7218918  -0.31778231 -0.28319922], Bias: 0.7200000000000003, Count: 12
+Weight Vector: [-0.9719832  -0.6264158  -0.41464431 -0.39501722], Bias: 0.7400000000000003, Count: 1
+Weight Vector: [-0.9823726  -0.5611498  -0.47643431 -0.37531882], Bias: 0.7200000000000003, Count: 113
+Weight Vector: [-0.9889566  -0.4720458  -0.56787031 -0.35554282], Bias: 0.7000000000000003, Count: 1
+Weight Vector: [-0.9483366  -0.4350058  -0.62811231 -0.35548276], Bias: 0.7200000000000003, Count: 38
+Weight Vector: [-0.9079826  -0.3990418  -0.68727431 -0.35128476], Bias: 0.7400000000000003, Count: 23
+Weight Vector: [-0.893097   -0.4744878  -0.65501231 -0.31977676], Bias: 0.7600000000000003, Count: 32
+Weight Vector: [-0.877359   -0.6658138  -0.57927831 -0.16970876], Bias: 0.7400000000000003, Count: 80
+Weight Vector: [-0.848357   -0.5936798  -0.66039231 -0.20164076], Bias: 0.7600000000000003, Count: 152
+Weight Vector: [-0.8549418  -0.5045758  -0.75182831 -0.18186476], Bias: 0.7400000000000003, Count: 6
+Weight Vector: [-0.8891498  -0.6001358  -0.62761031 -0.17391676], Bias: 0.7600000000000003, Count: 38
+Weight Vector: [-0.8995398  -0.5348698  -0.68940031 -0.15421876], Bias: 0.7400000000000003, Count: 13
+Weight Vector: [-0.9623858  -0.7955998  -0.37585431 -0.16745176], Bias: 0.7600000000000003, Count: 8
+Weight Vector: [-0.9809798  -0.7196578  -0.46871231 -0.16153776], Bias: 0.7400000000000003, Count: 25
+Weight Vector: [-0.9473818  -0.6355218  -0.55950831 -0.20939976], Bias: 0.7600000000000003, Count: 3
+Weight Vector: [-0.9577718  -0.5702558  -0.62129831 -0.18970176], Bias: 0.7400000000000003, Count: 251
+Weight Vector: [-0.9099378  -0.4791258  -0.72107431 -0.24767576], Bias: 0.7600000000000003, Count: 21
+Weight Vector: [-0.9820438  -0.5986058  -0.51924231 -0.26424496], Bias: 0.7800000000000004, Count: 27
+Weight Vector: [-0.9788222  -0.4693578  -0.68638831 -0.23381296], Bias: 0.7600000000000003, Count: 27
+Weight Vector: [-1.0527442  -0.7429158  -0.33479831 -0.28617496], Bias: 0.7800000000000004, Count: 12
+Weight Vector: [-1.0348418  -0.6474398  -0.43166031 -0.39799296], Bias: 0.8000000000000004, Count: 1
+Weight Vector: [-1.0452312  -0.5821738  -0.49345031 -0.37829456], Bias: 0.7800000000000004, Count: 113
+Weight Vector: [-1.0518152  -0.4930698  -0.58488631 -0.35851856], Bias: 0.7600000000000003, Count: 1
+Weight Vector: [-1.0111952  -0.4560298  -0.64512831 -0.3584585 ], Bias: 0.7800000000000004, Count: 38
+Weight Vector: [-0.9708412  -0.4200658  -0.70429031 -0.3542605 ], Bias: 0.8000000000000004, Count: 23
+Weight Vector: [-0.9559556  -0.4955118  -0.67202831 -0.3227525 ], Bias: 0.8200000000000004, Count: 32
+Weight Vector: [-0.9402176  -0.6868378  -0.59629431 -0.1726845 ], Bias: 0.8000000000000004, Count: 80
+Weight Vector: [-0.9112156  -0.6147038  -0.67740831 -0.2046165 ], Bias: 0.8200000000000004, Count: 27
+Weight Vector: [-0.8673296  -0.5236978  -0.77692831 -0.2591245 ], Bias: 0.8400000000000004, Count: 2
+Weight Vector: [-0.9477656  -0.6897778  -0.52582831 -0.2893225 ], Bias: 0.8600000000000004, Count: 45
+Weight Vector: [-0.9179736  -0.6212018  -0.60644631 -0.3178405 ], Bias: 0.8800000000000004, Count: 78
+Weight Vector: [-0.9245584  -0.5320978  -0.69788231 -0.2980645 ], Bias: 0.8600000000000004, Count: 44
+Weight Vector: [-0.9349484  -0.4668318  -0.75967231 -0.2783665 ], Bias: 0.8400000000000004, Count: 13
+Weight Vector: [-0.9977944  -0.7275618  -0.44612631 -0.2915995 ], Bias: 0.8600000000000004, Count: 8
+Weight Vector: [-1.0163884  -0.6516198  -0.53898431 -0.2856855 ], Bias: 0.8400000000000004, Count: 25
+Weight Vector: [-0.9827904  -0.5674838  -0.62978031 -0.3335475 ], Bias: 0.8600000000000004, Count: 3
+Weight Vector: [-0.9931804  -0.5022178  -0.69157031 -0.3138495 ], Bias: 0.8400000000000004, Count: 17
+Weight Vector: [-1.0577904  -0.6464878  -0.45870431 -0.3327721 ], Bias: 0.8600000000000004, Count: 23
+Weight Vector: [-1.044896   -0.5543638  -0.62564431 -0.2785741 ], Bias: 0.8400000000000004, Count: 84
+Weight Vector: [-1.029158   -0.7456898  -0.54991031 -0.1285061 ], Bias: 0.8200000000000004, Count: 5
+Weight Vector: [-0.999004   -0.7064978  -0.61107831 -0.1309547 ], Bias: 0.8400000000000004, Count: 122
+Weight Vector: [-0.95117    -0.6153678  -0.71085431 -0.1889287 ], Bias: 0.8600000000000004, Count: 53
+Weight Vector: [-0.96156    -0.5501018  -0.77264431 -0.1692307 ], Bias: 0.8400000000000004, Count: 22
+Weight Vector: [-1.035482   -0.8236598  -0.42105431 -0.2215927 ], Bias: 0.8600000000000004, Count: 12
+Weight Vector: [-1.0175796  -0.7281838  -0.51791631 -0.3334107 ], Bias: 0.8800000000000004, Count: 1
+Weight Vector: [-1.027969   -0.6629178  -0.57970631 -0.3137123 ], Bias: 0.8600000000000004, Count: 113
+Weight Vector: [-1.034553   -0.5738138  -0.67114231 -0.2939363 ], Bias: 0.8400000000000004, Count: 1
+Weight Vector: [-0.993933   -0.5367738  -0.73138431 -0.29387624], Bias: 0.8600000000000004, Count: 38
+Weight Vector: [-0.953579   -0.5008098  -0.79054631 -0.28967824], Bias: 0.8800000000000004, Count: 52
+Weight Vector: [-0.990361   -0.6825758  -0.60571431 -0.29176464], Bias: 0.9000000000000005, Count: 83
+Weight Vector: [-0.961359   -0.6104418  -0.68682831 -0.32369664], Bias: 0.9200000000000005, Count: 152
+Weight Vector: [-0.9679438  -0.5213378  -0.77826431 -0.30392064], Bias: 0.9000000000000005, Count: 57
+Weight Vector: [-1.0307898  -0.7820678  -0.46471831 -0.31715364], Bias: 0.9200000000000005, Count: 8
+Weight Vector: [-1.0493838  -0.7061258  -0.55757631 -0.31123964], Bias: 0.9000000000000005, Count: 25
+Weight Vector: [-1.0157858  -0.6219898  -0.64837231 -0.35910164], Bias: 0.9200000000000005, Count: 3
+Weight Vector: [-1.0261758  -0.5567238  -0.71016231 -0.33940364], Bias: 0.9000000000000005, Count: 124
+Weight Vector: [-1.0104378  -0.7480498  -0.63442831 -0.18933564], Bias: 0.8800000000000004, Count: 5
+Weight Vector: [-0.9802838  -0.7088578  -0.69559631 -0.19178424], Bias: 0.9000000000000005, Count: 122
+Weight Vector: [-0.9324498  -0.6177278  -0.79537231 -0.24975824], Bias: 0.9200000000000005, Count: 32
+Weight Vector: [-0.9941818  -0.7504518  -0.58456231 -0.26759464], Bias: 0.9400000000000005, Count: 16
+Weight Vector: [-0.9909602  -0.6212038  -0.75170831 -0.23716264], Bias: 0.9200000000000005, Count: 5
+Weight Vector: [-1.0013502  -0.5559378  -0.81349831 -0.21746464], Bias: 0.9000000000000005, Count: 22
+Weight Vector: [-1.0752722  -0.8294958  -0.46190831 -0.26982664], Bias: 0.9200000000000005, Count: 12
+Weight Vector: [-1.0573698  -0.7340198  -0.55877031 -0.38164464], Bias: 0.9400000000000005, Count: 1
+Weight Vector: [-1.0677592  -0.6687538  -0.62056031 -0.36194624], Bias: 0.9200000000000005, Count: 113
+Weight Vector: [-1.0743432  -0.5796498  -0.71199631 -0.34217024], Bias: 0.9000000000000005, Count: 1
+Weight Vector: [-1.0337232  -0.5426098  -0.77223831 -0.34211018], Bias: 0.9200000000000005, Count: 93
+Weight Vector: [-1.0179852  -0.7339358  -0.69650431 -0.19204218], Bias: 0.9000000000000005, Count: 80
+Weight Vector: [-0.9889832  -0.6618018  -0.77761831 -0.22397418], Bias: 0.9200000000000005, Count: 152
+Weight Vector: [-0.995568   -0.5726978  -0.86905431 -0.20419818], Bias: 0.9000000000000005, Count: 6
+Weight Vector: [-1.029776   -0.6682578  -0.74483631 -0.19625018], Bias: 0.9200000000000005, Count: 38
+Weight Vector: [-1.040166   -0.6029918  -0.80662631 -0.17655218], Bias: 0.9000000000000005, Count: 13
+Weight Vector: [-1.103012   -0.8637218  -0.49308031 -0.18978518], Bias: 0.9200000000000005, Count: 8
+Weight Vector: [-1.121606   -0.7877798  -0.58593831 -0.18387118], Bias: 0.9000000000000005, Count: 25
+Weight Vector: [-1.088008   -0.7036438  -0.67673431 -0.23173318], Bias: 0.9200000000000005, Count: 3
+Weight Vector: [-1.098398   -0.6383778  -0.73852431 -0.21203518], Bias: 0.9000000000000005, Count: 124
+Weight Vector: [-1.08266    -0.8297038  -0.66279031 -0.06196718], Bias: 0.8800000000000004, Count: 5
+Weight Vector: [-1.052506   -0.7905118  -0.72395831 -0.06441578], Bias: 0.9000000000000005, Count: 122
+Weight Vector: [-1.004672   -0.6993818  -0.82373431 -0.12238978], Bias: 0.9200000000000005, Count: 33
+Weight Vector: [-1.079678   -0.9685538  -0.47187031 -0.17793178], Bias: 0.9400000000000005, Count: 1
+Weight Vector: [-1.102054   -0.9018398  -0.49878031 -0.21707778], Bias: 0.9600000000000005, Count: 4
+Weight Vector: [-1.142156   -0.7645638  -0.66142031 -0.21227578], Bias: 0.9400000000000005, Count: 10
+Weight Vector: [-1.1389344  -0.6353158  -0.82856631 -0.18184378], Bias: 0.9200000000000005, Count: 5
+Weight Vector: [-1.1493244  -0.5700498  -0.89035631 -0.16214578], Bias: 0.9000000000000005, Count: 22
+Weight Vector: [-1.2232464  -0.8436078  -0.53876631 -0.21450778], Bias: 0.9200000000000005, Count: 12
+Weight Vector: [-1.205344   -0.7481318  -0.63562831 -0.32632578], Bias: 0.9400000000000005, Count: 1
+Weight Vector: [-1.2157334  -0.6828658  -0.69741831 -0.30662738], Bias: 0.9200000000000005, Count: 113
+Weight Vector: [-1.2223174  -0.5937618  -0.78885431 -0.28685138], Bias: 0.9000000000000005, Count: 1
+Weight Vector: [-1.1816974  -0.5567218  -0.84909631 -0.28679132], Bias: 0.9200000000000005, Count: 38
+Weight Vector: [-1.1413434  -0.5207578  -0.90825831 -0.28259332], Bias: 0.9400000000000005, Count: 49
+Weight Vector: [-1.155757   -0.6559238  -0.79144231 -0.27011952], Bias: 0.9600000000000005, Count: 6
+Weight Vector: [-1.140019   -0.8472498  -0.71570831 -0.12005152], Bias: 0.9400000000000005, Count: 32
+Weight Vector: [-1.118745   -0.7733358  -0.79889631 -0.15880952], Bias: 0.9600000000000005, Count: 75
+Weight Vector: [-1.074859   -0.6823298  -0.89841631 -0.21331752], Bias: 0.9800000000000005, Count: 7
+Weight Vector: [-1.151265   -0.9434318  -0.55925031 -0.25942152], Bias: 1.0000000000000004, Count: 40
+Weight Vector: [-1.121473   -0.8748558  -0.63986831 -0.28793952], Bias: 1.0200000000000005, Count: 46
+Weight Vector: [-1.095107   -0.8368218  -0.70609031 -0.2866381 ], Bias: 1.0400000000000005, Count: 32
+Weight Vector: [-1.1016918  -0.7477178  -0.79752631 -0.2668621 ], Bias: 1.0200000000000005, Count: 44
+Weight Vector: [-1.1120818  -0.6824518  -0.85931631 -0.2471641 ], Bias: 1.0000000000000004, Count: 49
+Weight Vector: [-1.1224718  -0.6171858  -0.92110631 -0.2274661 ], Bias: 0.9800000000000004, Count: 17
+Weight Vector: [-1.1870818  -0.7614558  -0.68824031 -0.2463887 ], Bias: 1.0000000000000004, Count: 23
+Weight Vector: [-1.1741874  -0.6693318  -0.85518031 -0.1921907 ], Bias: 0.9800000000000004, Count: 84
+Weight Vector: [-1.1584494  -0.8606578  -0.77944631 -0.0421227 ], Bias: 0.9600000000000004, Count: 5
+Weight Vector: [-1.1282954  -0.8214658  -0.84061431 -0.0445713 ], Bias: 0.9800000000000004, Count: 122
+Weight Vector: [-1.0804614  -0.7303358  -0.94039031 -0.1025453 ], Bias: 1.0000000000000004, Count: 21
+Weight Vector: [-1.1525674  -0.8498158  -0.73855831 -0.1191145 ], Bias: 1.0200000000000005, Count: 27
+Weight Vector: [-1.1493458  -0.7205678  -0.90570431 -0.0886825 ], Bias: 1.0000000000000004, Count: 5
+Weight Vector: [-1.1597358  -0.6553018  -0.96749431 -0.0689845 ], Bias: 0.9800000000000004, Count: 22
+Weight Vector: [-1.2336578  -0.9288598  -0.61590431 -0.1213465 ], Bias: 1.0000000000000004, Count: 12
+Weight Vector: [-1.2157554  -0.8333838  -0.71276631 -0.2331645 ], Bias: 1.0200000000000005, Count: 1
+Weight Vector: [-1.2261448  -0.7681178  -0.77455631 -0.2134661 ], Bias: 1.0000000000000004, Count: 113
+Weight Vector: [-1.2327288  -0.6790138  -0.86599231 -0.1936901 ], Bias: 0.9800000000000004, Count: 1
+Weight Vector: [-1.1921088  -0.6419738  -0.92623431 -0.19363004], Bias: 1.0000000000000004, Count: 15
+Weight Vector: [-1.2724548  -0.8082198  -0.67714031 -0.22238004], Bias: 1.0200000000000005, Count: 23
+Weight Vector: [-1.2321008  -0.7722558  -0.73630231 -0.21818204], Bias: 1.0400000000000005, Count: 135
+Weight Vector: [-1.2030988  -0.7001218  -0.81741631 -0.25011404], Bias: 1.0600000000000005, Count: 27
+Weight Vector: [-1.1592128  -0.6091158  -0.91693631 -0.30462204], Bias: 1.0800000000000005, Count: 2
+Weight Vector: [-1.2396488  -0.7751958  -0.66583631 -0.33482004], Bias: 1.1000000000000005, Count: 45
+Weight Vector: [-1.2098568  -0.7066198  -0.74645431 -0.36333804], Bias: 1.1200000000000006, Count: 63
+Weight Vector: [-1.1568988  -0.9093678  -0.71983431 -0.25392404], Bias: 1.1000000000000005, Count: 15
+Weight Vector: [-1.1634836  -0.8202638  -0.81127031 -0.23414804], Bias: 1.0800000000000005, Count: 44
+Weight Vector: [-1.1738736  -0.7549978  -0.87306031 -0.21445004], Bias: 1.0600000000000005, Count: 49
+Weight Vector: [-1.1842636  -0.6897318  -0.93485031 -0.19475204], Bias: 1.0400000000000005, Count: 17
+Weight Vector: [-1.2488736  -0.8340018  -0.70198431 -0.21367464], Bias: 1.0600000000000005, Count: 23
+Weight Vector: [-1.2359792  -0.7418778  -0.86892431 -0.15947664], Bias: 1.0400000000000005, Count: 211
+Weight Vector: [-1.1881452  -0.6507478  -0.96870031 -0.21745064], Bias: 1.0600000000000005, Count: 21
+Weight Vector: [-1.2602512  -0.7702278  -0.76686831 -0.23401984], Bias: 1.0800000000000005, Count: 27
+Weight Vector: [-1.2570296  -0.6409798  -0.93401431 -0.20358784], Bias: 1.0600000000000005, Count: 27
+Weight Vector: [-1.3309516  -0.9145378  -0.58242431 -0.25594984], Bias: 1.0800000000000005, Count: 12
+Weight Vector: [-1.3130492  -0.8190618  -0.67928631 -0.36776784], Bias: 1.1000000000000005, Count: 1
+Weight Vector: [-1.3234386  -0.7537958  -0.74107631 -0.34806944], Bias: 1.0800000000000005, Count: 113
+Weight Vector: [-1.3300226  -0.6646918  -0.83251231 -0.32829344], Bias: 1.0600000000000005, Count: 1
+Weight Vector: [-1.2894026  -0.6276518  -0.89275431 -0.32823338], Bias: 1.0800000000000005, Count: 38
+Weight Vector: [-1.2490486  -0.5916878  -0.95191631 -0.32403538], Bias: 1.1000000000000005, Count: 55
+Weight Vector: [-1.2333106  -0.7830138  -0.87618231 -0.17396738], Bias: 1.0800000000000005, Count: 36
+Average Test Error: 0.014028056112224463
+
+
+## c.
+Learned Weight Vector: [-0.84370628 -0.54960948 -0.53990212 -0.21135024]
+Average Test Error: 0.018036072144288595
+**ANSWER: ** Compared to the Voted Perceptron model in part b, the weights are much closer to 0 and the test error was slighly larger, but the two models generally had the same performance.
+
+## d.
+
+Comparing all three of these models, the Averaged and Voted models performed relatively the same and had a small test error, meaning they captured the pattern in the data well. Both were way better than the Standard model, which was too simple and could not correctly classify all points in the test data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

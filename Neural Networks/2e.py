@@ -117,6 +117,7 @@ training_errors_relu, test_errors_relu = train_and_evaluate(
 
 print("\n")
 print("Training Errors with ReLU:", training_errors_relu)
+print("\n")
 print("Test Errors with ReLU:", test_errors_relu)
 print("\n")
 print("2e answer: The ReLU activation with He initialization consistently achieved lower errors(though both performed really well) and faster convergence compared to Tanh with Xavier initialization. It had better performance than the other models above, probably due to the built in Adam optimizer.")
